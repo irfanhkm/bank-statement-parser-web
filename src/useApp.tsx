@@ -31,8 +31,7 @@ export const useApp = () => {
                 const textContent = await (await pdf.getPage(i)).getTextContent();
                 text += textContent.items.map(item => item.str.trim()).filter(Boolean).join('\n') + '\n';
             }
-    
-            console.log(text);
+
             return text;
         } catch (err) {
             if (err.name === 'PasswordException' || err.message.includes('Incorrect Password')) {
@@ -61,7 +60,7 @@ export const useApp = () => {
             const bankUtil = BankUtilFactory.getBankUtil(selectedBank);
             const { csv, errors } = bankUtil.processPdfData(textData);
             const blob = new Blob([csv], { type: 'text/csv' });
-            const fileName = file.name + '.csv';
+            const fileName = file.name.replaceAll('.pdf', '') + '.csv';
             await saveAs(blob, fileName);
             setResult(`File successfully saved`);
             setErrors(errors);
