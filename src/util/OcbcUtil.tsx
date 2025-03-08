@@ -3,7 +3,20 @@ import { IPdfBankUtil } from "./IPdfBankUtil";
 
 export class OcbcUtil implements IPdfBankUtil {
     private bannedWords = [
-        "Total Mutasi Debet"
+        "Total Mutasi Debet",
+        "BILAMANA",
+        "TERHITUNG SEJAK TANGGAL STEMPEL POS",
+        "DITERIMANYA PER EKSPEDISI",
+        "TANGGAL TERKIRIMNYA LAYANAN",
+        "STATEMENT REKENING KORAN",
+        "SEGALA RISIKO",
+        "TUNTUTAN",
+        "NASABAH",
+        "TIDAK MEMBUAT NOTA UNTUK SETIAP PERKREDITAN BUNGA",
+        "KOMPUTER INI TIDAK MEMERLUKAN TANDA TANGAN PEJABAT BANK.",
+        "Waspada! File APK. (Android Package Kit)",
+        "web.ocbc.id/apkpalsu",
+        "INI TIDAK ADA SANGGAHAN DARI"
     ];
 
     processPdfData(textData: string): { csv: string; errors: string[]; } {
@@ -28,16 +41,37 @@ export class OcbcUtil implements IPdfBankUtil {
                 let comment = "";
                 // Extract "Berita" comment if available
                 if (lineArray[startData + 6]?.startsWith("Berita")) {
-                    comment = lineArray[startData + 6]?.replace("Berita :", "").trim();
+                    comment = lineArray[startData + 6]?.trim();
                     startData += 1; // Skip extra comment line
-                    if (lineArray[startData + 6] && !this.isValidDateFormat(lineArray[startData + 6])) {
+
+                    while (lineArray[startData + 6] && !this.isValidDateFormat(lineArray[startData + 6])) {
                         comment += " " + lineArray[startData + 6].trim(); // Append multiline comment
                         startData += 1;
                     }
-                    this.bannedWords.forEach(word => {
-                        comment = comment.replace(word, "").trim();
-                    });
+                } else {
+                    let commentLine = startData + 6;
+
+                    if (this.bannedWords.some(word => lineArray[commentLine].includes(word))) {
+                        while (!lineArray[commentLine].includes("TGL")) {                        
+                            commentLine++;
+                        }
+                        commentLine += 8;
+                        comment = lineArray[commentLine]?.trim();
+                        startData = commentLine;
+                        startData += 1;
+                        if (lineArray[startData] && !this.isValidDateFormat(lineArray[startData])) {
+                            comment += " " + lineArray[startData].trim();
+                        }
+                    } else {
+                        comment = lineArray[commentLine]?.trim();
+                        startData += 1;
+                        if (lineArray[startData + 6] && !this.isValidDateFormat(lineArray[startData + 6])) {
+                            comment += " " + lineArray[startData + 6].trim();
+                            startData += 1;
+                        }
+                    }
                 }
+                comment = this.removeTextAfterBannedWords(comment);
                 finalArr.push([date, title, amount, comment].join(csvIdentifier));
             }
     
@@ -47,6 +81,22 @@ export class OcbcUtil implements IPdfBankUtil {
         return { csv: finalArr.join('\n'), errors };
     }
 
+
+    // Helper method to clean comments
+    private removeTextAfterBannedWords(text: string): string {
+        if (!text) return "";
+        
+        let cleanedText = text;
+        for (const word of this.bannedWords) {
+        const index = cleanedText.indexOf(word);
+        if (index !== -1) {
+            cleanedText = cleanedText.substring(0, index).trim();
+        }
+        }
+        
+        return cleanedText;
+    }
+  
     private isValidDateFormat(dateString: string) {
         const dateFormat = "DD/MM/YYYY";
         const parsedDate = moment(dateString, dateFormat, true);
