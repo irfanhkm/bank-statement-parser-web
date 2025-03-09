@@ -1,6 +1,6 @@
 import { BankName } from "./constant";
 import { IPdfBankUtil } from "./IPdfBankUtil";
-import { JagoSyariahUtil } from "./jagoSyariahUtil";
+import { JagoSyariahUtil } from "./JagoSyariahUtil";
 import { OcbcUtil } from "./OcbcUtil";
 
 export class BankUtilFactory {
