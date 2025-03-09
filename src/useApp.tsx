@@ -1,9 +1,8 @@
 import { useCallback, useState } from "react";
-import { useDropzone } from "react-dropzone";
 import './App.css'
 import { saveAs } from 'file-saver';
 import { pdfjs } from 'react-pdf';
-import { BankUtilFactory } from "./util/bankUtilFactory";
+import { BankUtilFactory } from "./util/BankUtilFactory";
 import { BankName } from "./util/constant";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
